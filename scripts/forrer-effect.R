@@ -3,9 +3,9 @@ library(dplyr)
 library(reshape2)
 library(ggplot2)
 
-FORRER_KEY <- ""
+FORRER_KEY <- "Forrer results 2020"
 
-sheet <- gs_key(FORRER_KEY)
+sheet <- gs_title(FORRER_KEY)
 df <- gs_read(sheet, ws=1)
 questions<- melt(df[,2:13])
 feedback <- melt(df[,14:15])

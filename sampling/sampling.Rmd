@@ -1,0 +1,63 @@
+---
+title: "Sampling demonstration"
+author: "Lukáš Hejtmánek"
+date: "8 October 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+normal <-  c(3,4,5,5,5,6,7)
+normal_shifted <- c(5,6,7,7,7,8,9)
+extremes <- c(1,1,2,5,8,10,10)
+bias_extremes <- c(1,1,4,5,6,8,8)
+missing <- c(3,NA,5,5,NA,6,NA)
+
+types <- c(rep("normal", 7), rep("normal_shifted", 7), rep("extremes", 7), rep("bias_extremes", 7), rep("missing", 7))
+
+values <- c(normal, normal_shifted, extremes, bias_extremes, missing)
+mean(values, na.rm = T)
+
+df <- data.frame(value=values, type=types)
+
+  
+sample_data <- function(data, N){
+  selected <- c()
+  for(i in 0:4){
+    selected <- c(selected, sample(1:7, N) + 7*i)
+  }
+  sampled_data <- data[selected,]
+  ls <- list()
+  ls$mean <- mean(sampled_data$value, na.rm = T)
+  ls$plot <- ggplot(sampled_data, aes(type, value, fill=type)) + stat_summary(fun.y="mean", geom="bar") + 
+    stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge", width=0.2) + 
+    guides(fill=FALSE)
+  ls$data <- sampled_data
+  return(ls)
+}
+ls_all <- sample_data(df, 7)
+```
+
+# Basic descriptors
+
+
+So in our case we have a mean `r ls_all$mean` and a following distribution.
+
+
+```{r, echo=F, warning=F}
+ls_all$plot
+```
+
+looking at each separately, we get 
+
+```{r, echo=F, message=F, warning=F}
+ggplot(ls_all$data, aes(value)) + geom_histogram() + geom_density(aes(y=..density..*5)) + facet_wrap(~type)
+```
+
+
+## Sampling
+
+Sampling two values
+```{r, echo=F, message=F, warning=F}
+
+```
