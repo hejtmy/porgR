@@ -7,13 +7,11 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(ggplot2)
-set.seed(100)
-N <- 1000
-normal <-  rnorm(N, 100, 15)
-normal_shifted <- rnorm(N, 110, 15)
-extremes <- (15 * rnorm(N, 0, 1)) + 
-bias_extremes <- c(rnorm(N/4, 25, 5), c(rnorm(N*3/4, 75, 5)))
-missing <- normal
+normal <-  c(3,4,5,5,5,6,7)
+normal_shifted <- c(5,6,7,7,7,8,9)
+extremes <- c(1,1,2,5,8,10,10)
+bias_extremes <- c(1,1,4,5,6,8,8)
+missing <- c(3,NA,5,5,NA,6,NA)
 
 types <- c(rep("normal", 7), rep("normal_shifted", 7), rep("extremes", 7), rep("bias_extremes", 7), rep("missing", 7))
 
