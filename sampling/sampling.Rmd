@@ -2,64 +2,108 @@
 title: "Sampling demonstration"
 author: "Lukáš Hejtmánek"
 date: "8 October 2018"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 library(ggplot2)
+library(dplyr)
+library(knitr)
 set.seed(100)
 N <- 1000
 normal <-  rnorm(N, 100, 15)
 normal_shifted <- rnorm(N, 110, 15)
-extremes <- (15 * rnorm(N, 0, 1)) + 
-bias_extremes <- c(rnorm(N/4, 25, 5), c(rnorm(N*3/4, 75, 5)))
-missing <- normal
+extremes <- c((15 * rnorm(N/2, 0, 1)) + 50, (15 * rnorm(N/2, 0, 1)) + 150)
+bias_extremes <- c(rnorm(N/4, 75, 5), c(rnorm(N*3/4, 110, 5)))
+missing <- c(normal[sample(1:N,round(0.7*N), replace=F)],rep(NA, round(0.3*N)))
 
-types <- c(rep("normal", 7), rep("normal_shifted", 7), rep("extremes", 7), rep("bias_extremes", 7), rep("missing", 7))
+types <- c(rep("normal", N), rep("normal_shifted", N), 
+           rep("extremes", N), rep("bias_extremes", N), 
+           rep("missing", N))
 
 values <- c(normal, normal_shifted, extremes, bias_extremes, missing)
 mean(values, na.rm = T)
 
 df <- data.frame(value=values, type=types)
-
   
-sample_data <- function(data, N){
+sample_data <- function(data, n_sample){
   selected <- c()
   for(i in 0:4){
-    selected <- c(selected, sample(1:7, N) + 7*i)
+    selected <- c(selected, sample(1:N, n_sample) + N*i)
   }
   sampled_data <- data[selected,]
   ls <- list()
   ls$mean <- mean(sampled_data$value, na.rm = T)
-  ls$plot <- ggplot(sampled_data, aes(type, value, fill=type)) + stat_summary(fun.y="mean", geom="bar") + 
+  ls$mean_plot <- ggplot(sampled_data, aes(type, value, fill=type)) + stat_summary(fun.y="mean", geom="bar") + 
     stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge", width=0.2) + 
     guides(fill=FALSE)
+  ls$hist_plot <- ggplot(sampled_data, aes(value, fill=type)) + geom_histogram(bins=50) + geom_density(aes(y=..density..*5)) + 
+    facet_wrap(~type) + geom_vline(xintercept = ls$mean) + guides(fill=FALSE)
   ls$data <- sampled_data
   return(ls)
 }
-ls_all <- sample_data(df, 7)
+ls_all <- sample_data(df, N)
 ```
 
 # Basic descriptors
 
-
 So in our case we have a mean `r ls_all$mean` and a following distribution.
 
-
 ```{r, echo=F, warning=F}
-ls_all$plot
+ls_all$mean_plot
+true_mean <- ls_all$data %>% group_by(type) %>%  summarize(true_mean=mean(value, na.rm = T))
 ```
 
-looking at each separately, we get 
+looking at each separately, we get the following distribution. ALL have approximate mean of 100, except normal shifted value.
 
 ```{r, echo=F, message=F, warning=F}
-ggplot(ls_all$data, aes(value)) + geom_histogram() + geom_density(aes(y=..density..*5)) + facet_wrap(~type)
+ls_all$hist_plot
 ```
-
 
 ## Sampling
-
-Sampling two values
+### Sampling 10 percent of the sample
+Sampling ten percent values. We will see what happens if we do that 100 times
 ```{r, echo=F, message=F, warning=F}
+ls_10 <- list()
+n_sample <-  round(N/10)
+df_10_all_data <- data.frame(value=c(), type=c(), sample=c())
+for(i in 1:100){
+  ls_10[[i]] <- sample_data(df,n_sample)
+  new_data <- ls_10[[i]]$data
+  new_data$sample <- rep(i, n_sample)
+  df_10_all_data <- rbind(df_10_all_data, new_data)
+}
+```
 
+Let's have a look at the means of those 100 samples of 10 percent of data
+```{r, echo=F, message=F, warning=F}
+means_10 <- df_10_all_data %>% group_by(sample, type) %>% summarize(mean=mean(value, na.rm=T))
+ggplot(means_10, aes(mean, fill=type)) + geom_histogram(bins=30) + facet_wrap(~type) + guides(fill=F)
+range_10 <- means_10 %>% group_by(type) %>% summarize(min=min(mean, na.rm = T), max = max(mean, na.rm=T), mean=mean(mean, na.rm=T))
+range_10 <- merge(range_10, true_mean, by="type")
+kable(range_10)
+```
+
+
+## Sampling 5 percent
+
+```{r, echo=F, message=F, warning=F}
+ls_5 <- list()
+n_sample <-  round(N/20)
+df_5_all_data <- data.frame(value=c(), type=c(), sample=c())
+for(i in 1:100){
+  ls_5[[i]] <- sample_data(df,n_sample)
+  new_data <- ls_5[[i]]$data
+  new_data$sample <- rep(i, n_sample)
+  df_5_all_data <- rbind(df_5_all_data, new_data)
+}
+```
+
+Let's have a look at the means of those 100 samples of 10 percent of data
+```{r, echo=F, message=F, warning=F}
+means_5 <- df_5_all_data %>% group_by(sample, type) %>% summarize(mean=mean(value, na.rm=T))
+ggplot(means_5, aes(mean, fill=type)) + geom_histogram(bins=30) + facet_wrap(~type) + guides(fill=F)
+range_5 <- means_5 %>% group_by(type) %>% summarize(min=min(mean, na.rm = T), max = max(mean, na.rm=T), mean=mean(mean, na.rm=T))
+range_5 <- merge(range_5, true_mean, by="type")
+kable(range_5)
 ```
