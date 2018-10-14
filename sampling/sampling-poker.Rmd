@@ -105,6 +105,6 @@ Let's have a look at the means of those 100 samples of 10 percent of data
 means_2 <- df_2_all_data %>% group_by(sample, type) %>% summarize(mean=mean(value, na.rm=T))
 ggplot(means_2, aes(mean, fill=type)) + geom_histogram(bins=30) + facet_wrap(~type) + guides(fill=F)
 range_2 <- means_2 %>% group_by(type) %>% summarize(min=min(mean, na.rm = T), max = max(mean, na.rm=T), mean=mean(mean, na.rm=T))
-range2 <- merge(range_2, true_mean, by="type")
+range_2 <- merge(range_2, true_mean, by="type")
 kable(range_2)
 ```
