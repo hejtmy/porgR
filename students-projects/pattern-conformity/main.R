@@ -19,3 +19,7 @@ colnames(questionnaire) <- c("id", "skupina", "noticed.pattern", "didnt.know.som
   
 df <- df_long %>% left_join(questionnaire, by="id")
 
+## adds consecutive values
+df$consecutive <- sequence(rle(as.character(df$value))$lengths)
+df$training <- FALSE
+df$training <- df$value <= 22
