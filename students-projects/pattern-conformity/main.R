@@ -21,5 +21,10 @@ df <- df_long %>% left_join(questionnaire, by="id")
 
 ## adds consecutive values
 df$consecutive <- sequence(rle(as.character(df$value))$lengths)
+df$consecutive[df$consecutive > 3] <- NA
 df$training <- FALSE
-df$training <- df$value <= 22
+df$training <- df$trial > 22
+
+n_pattens <- df %>% group_by(skupina, training) %>% summarize(n_patterns = sum(consecutive == 3, na.rm=T))
+chisq.test(n_pattens$n_patterns)
+chisq.test(c(15,33))

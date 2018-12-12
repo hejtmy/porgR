@@ -60,7 +60,7 @@ experiment$missing <- experiment %>% select(2:16) %>% mutate(missing = apply(., 
 ```
 
 ## By gender reports
-```{r}
+```{r, echo=F}
 means <- experiment %>% group_by(pohlavi) %>% summarise(mean=mean(correct), se=sd(correct)/sqrt(n()))
 kable(means,digits = 2)
 ggplot(means, aes(pohlavi, mean, fill=pohlavi)) + geom_bar(stat='identity')+ geom_errorbar(aes(ymin=mean-2*se, ymax=mean+2*se),width=.1)
